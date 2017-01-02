@@ -23,8 +23,11 @@ public:
 	/// Destructor
 	~simulationBasedMpc();
 
-	void getBestControlOffset(double &u_d_best, double &psi_d_best, double u_d, double psi_d, Eigen::Matrix<double,6,1> asv_state, Eigen::Matrix<double,Eigen::Dynamic,9> obst_states);
+	void getBestControlOffset(double &u_d_best, double &psi_d_best, double u_d, double psi_d, const Eigen::Matrix<double,6,1>& asv_state, const Eigen::Matrix<double,9,1>& obst_states);
 
+	// TODO: Move to private
+	shipModel *asv;
+	std::vector<obstacle*> obst_vect;
 private:
 
 	void eulerIntegration(double u_d, double psi_d);
@@ -66,9 +69,6 @@ private:
 
 	Eigen::Matrix<double,13,1> Chi_ca_;
 	Eigen::Vector4d P_ca_;
-
-	shipModel *asv;
-	std::vector<obstacle*> obst_vect;
 
 };
 

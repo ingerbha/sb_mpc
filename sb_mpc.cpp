@@ -13,8 +13,8 @@
 static const double DEG2RAD = M_PI/180.0f;
 
 simulationBasedMpc::simulationBasedMpc(){
-	T_ = 100.0;
-	DT_ = 0.05;
+	T_ = 50.0;//100.0;
+	DT_ = 1.0;//0.05;
 
 	P_ = 1.0;
 	Q_ = 4.0;
@@ -38,6 +38,7 @@ simulationBasedMpc::simulationBasedMpc(){
 	cost_ = INFINITY;
 
 	Chi_ca_ << -90.0,-75.0,-60.0,-45.0,-30.0,-15.0,0.0,15.0,30.0,45.0,60.0,75.0,90.0;
+	Chi_ca_ *= DEG2RAD;
 	P_ca_ << -1.0, 0.0, 0.5, 1.0;
 
 	asv = new shipModel(T_,DT_);
@@ -49,21 +50,21 @@ simulationBasedMpc::~simulationBasedMpc(){
 }
 
 
-void simulationBasedMpc::getBestControlOffset(double &u_d_best, double &psi_d_best, double u_d, double psi_d, Eigen::Matrix<double,6,1> asv_state, Eigen::Matrix<double,Eigen::Dynamic,9> obst_states){
+void simulationBasedMpc::getBestControlOffset(double &u_d_best, double &psi_d_best, double u_d, double psi_d, const Eigen::Matrix<double,6,1>& asv_state, const Eigen::Matrix<double,9,1>& obst_states){
 	double cost = INFINITY;
 	double cost_i = 0;
 	double cost_k;
 	int n_obst;
 
-	if (obst_states.rows() == 0){
+	if (obst_states.cols() == 0){
 		u_d_best = 1;
 		psi_d_best = 0;
 		P_ca_last_ = 1;
 		Chi_ca_last_ = 0;
 		return;
 	}else{
-		for (int i = 0; i < obst_states.rows(); i++){
-			obstacle *obst = new obstacle(obst_states.row(i), T_, DT_);
+		for (int i = 0; i < obst_states.cols(); i++){
+			obstacle *obst = new obstacle(obst_states.col(i), T_, DT_);
 			obst_vect.push_back(obst);
 		}
 		n_obst = obst_vect.size();
@@ -106,7 +107,7 @@ double simulationBasedMpc::costFunction(double P_ca, double Chi_ca, int k){
 	Eigen::Vector2d d, los,v_o, v_s;
 	bool mu, OT, SB, HO, CR;
 	// TODO: Adjust radius front/back according to AIS data
-	double combined_radius = 0; //asv->radius + obstacles_vect[k]->radius_;
+	double combined_radius = 10; //asv->radius + obstacles_vect[k]->radius_;
 	double d_safe = D_SAFE_ + combined_radius;
 	double d_close = D_CLOSE_ + combined_radius;
 	double H0 = 0;
