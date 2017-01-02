@@ -23,11 +23,18 @@ public:
 	/// Destructor
 	~simulationBasedMpc();
 
-	void getBestControlOffset(double &u_d_best, double &psi_d_best, double u_d, double psi_d, const Eigen::Matrix<double,6,1>& asv_state, const Eigen::Matrix<double,9,1>& obst_states);
+	/* @brief Sets the offset pair (u_os_best, psi_os_best) with the lowst cost
+	 *
+	 * @param u_os_best The reference parameter to store the best speed offset.
+	 * @param psi_os_best The reference parameter to store the best heading offset.
+	 * @param u_d The nominal speed
+	 * @param psi_d The nominal heading
+	 * @param asv_state The state of the asv: x, y, psi, u, v, r.
+	 * @param obst_states The states of the obstacles : x, y, u, v, A, B, C, D. (A, B, C, D - size from AIS)
+	 */
+	void getBestControlOffset(double &u_os_best, double &psi_os_best, double u_d, double psi_d, const Eigen::Matrix<double,6,1>& asv_state, const Eigen::Matrix<double,-1,9>& obst_states);
 
-	// TODO: Move to private
-	shipModel *asv;
-	std::vector<obstacle*> obst_vect;
+
 private:
 
 	void eulerIntegration(double u_d, double psi_d);
@@ -69,6 +76,9 @@ private:
 
 	Eigen::Matrix<double,13,1> Chi_ca_;
 	Eigen::Vector4d P_ca_;
+
+	shipModel *asv;
+	std::vector<obstacle*> obst_vect;
 
 };
 

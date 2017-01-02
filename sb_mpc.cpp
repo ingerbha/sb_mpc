@@ -50,21 +50,21 @@ simulationBasedMpc::~simulationBasedMpc(){
 }
 
 
-void simulationBasedMpc::getBestControlOffset(double &u_d_best, double &psi_d_best, double u_d, double psi_d, const Eigen::Matrix<double,6,1>& asv_state, const Eigen::Matrix<double,9,1>& obst_states){
+void simulationBasedMpc::getBestControlOffset(double &u_os_best, double &psi_os_best, double u_d, double psi_d, const Eigen::Matrix<double,6,1>& asv_state, const Eigen::Matrix<double,-1,9>& obst_states){
 	double cost = INFINITY;
 	double cost_i = 0;
 	double cost_k;
 	int n_obst;
 
-	if (obst_states.cols() == 0){
-		u_d_best = 1;
-		psi_d_best = 0;
+	if (obst_states.rows() == 0){
+		u_os_best = 1;
+		psi_os_best = 0;
 		P_ca_last_ = 1;
 		Chi_ca_last_ = 0;
 		return;
 	}else{
-		for (int i = 0; i < obst_states.cols(); i++){
-			obstacle *obst = new obstacle(obst_states.col(i), T_, DT_);
+		for (int i = 0; i < obst_states.rows(); i++){
+			obstacle *obst = new obstacle(obst_states.row(i), T_, DT_);
 			obst_vect.push_back(obst);
 		}
 		n_obst = obst_vect.size();
@@ -86,8 +86,8 @@ void simulationBasedMpc::getBestControlOffset(double &u_d_best, double &psi_d_be
 
 			if (cost_i < cost){
 				cost = cost_i; 			// Minimizing the overall cost
-				u_d_best = P_ca_[j];
-				psi_d_best = Chi_ca_[i];
+				u_os_best = P_ca_[j];
+				psi_os_best = Chi_ca_[i];
 			}
 		}
 	}
@@ -97,8 +97,8 @@ void simulationBasedMpc::getBestControlOffset(double &u_d_best, double &psi_d_be
 	}
 	obst_vect.clear();
 
-	P_ca_last_ = u_d_best;
-	Chi_ca_last_ = psi_d_best;
+	P_ca_last_ = u_os_best;
+	Chi_ca_last_ = psi_os_best;
 }
 
 
