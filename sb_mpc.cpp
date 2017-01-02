@@ -11,6 +11,7 @@
 #include <vector>
 
 static const double DEG2RAD = M_PI/180.0f;
+static const double RAD2DEG = 180.0f/M_PI;
 
 simulationBasedMpc::simulationBasedMpc(){
 	T_ = 50.0;//100.0;
@@ -37,8 +38,10 @@ simulationBasedMpc::simulationBasedMpc(){
 
 	cost_ = INFINITY;
 
+	Chi_ca_.resize(13);
 	Chi_ca_ << -90.0,-75.0,-60.0,-45.0,-30.0,-15.0,0.0,15.0,30.0,45.0,60.0,75.0,90.0;
 	Chi_ca_ *= DEG2RAD;
+	P_ca_.resize(4);
 	P_ca_ << -1.0, 0.0, 0.5, 1.0;
 
 	asv = new shipModel(T_,DT_);
@@ -49,6 +52,159 @@ simulationBasedMpc::simulationBasedMpc(){
 simulationBasedMpc::~simulationBasedMpc(){
 }
 
+double simulationBasedMpc::getT(){
+	return T_;
+}
+
+double simulationBasedMpc::getDt(){
+	return DT_;
+}
+
+double simulationBasedMpc::getP(){
+	return P_;
+}
+
+double simulationBasedMpc::getQ(){
+	return Q_;
+}
+
+double simulationBasedMpc::getDClose(){
+	return D_CLOSE_;
+}
+
+double simulationBasedMpc::getDSafe(){
+	return D_SAFE_;
+}
+
+double simulationBasedMpc::getKColl(){
+	return K_COLL_;
+}
+double simulationBasedMpc::getPhiAH(){
+	return PHI_AH_*RAD2DEG;
+}
+
+double simulationBasedMpc::getPhiOT(){
+	return PHI_OT_*RAD2DEG;
+}
+
+double simulationBasedMpc::getPhiHO(){
+	return PHI_HO_*RAD2DEG;
+}
+
+double simulationBasedMpc::getPhiCR(){
+	return PHI_CR_*RAD2DEG;
+}
+
+double simulationBasedMpc::getKappa(){
+	return KAPPA_;
+}
+
+double simulationBasedMpc::getKP(){
+	return K_P_;
+}
+
+double simulationBasedMpc::getKdP(){
+	return K_DP_;
+}
+
+double simulationBasedMpc::getKChi(){
+	return K_CHI_;
+}
+
+double simulationBasedMpc::getKdChiSB(){
+	return K_DCHI_SB_;
+}
+
+double simulationBasedMpc::getKdChiP(){
+	return K_DCHI_P_;
+}
+
+Eigen::VectorXd simulationBasedMpc::getChiCA(){
+	return Chi_ca_*RAD2DEG;
+}
+
+Eigen::VectorXd simulationBasedMpc::getPCA(){
+	return P_ca_;
+}
+
+// Todo: Add validity checks for the set functions
+void simulationBasedMpc::setT(double T){
+	T_ = T;
+}
+
+void simulationBasedMpc::setDt(double dt){
+	DT_ = dt;
+}
+
+void simulationBasedMpc::setP(double p){
+	P_ = p;
+}
+
+void simulationBasedMpc::setQ(double q){
+	Q_ = q;
+}
+
+void simulationBasedMpc::setDClose(double d_close){
+	D_CLOSE_ = d_close;
+}
+
+void simulationBasedMpc::setDSafe(double d_safe){
+	D_SAFE_ = d_safe;
+}
+
+void simulationBasedMpc::setKColl(double k_coll){
+	K_COLL_ = k_coll;
+}
+
+void simulationBasedMpc::setPhiAH(double phi_AH){
+	PHI_AH_ = phi_AH*DEG2RAD;
+}
+
+void simulationBasedMpc::setPhiOT(double phi_OT){
+	PHI_OT_ = phi_OT*DEG2RAD;
+}
+
+void simulationBasedMpc::setPhiHO(double phi_HO){
+	PHI_HO_ = phi_HO*DEG2RAD;
+}
+
+void simulationBasedMpc::setPhiCR(double phi_CR){
+	PHI_CR_ = phi_CR*DEG2RAD;
+}
+
+void simulationBasedMpc::setKappa(double kappa){
+	KAPPA_ = kappa;
+}
+
+void simulationBasedMpc::setKP(double K_P){
+	K_P_ = K_P;
+}
+
+void simulationBasedMpc::setKdP(double K_dP){
+	K_DP_ = K_dP;
+}
+
+void simulationBasedMpc::setKChi(double K_Chi){
+	K_CHI_ = K_Chi;
+}
+
+void simulationBasedMpc::setKdChiSB(double K_dChi_SB){
+	K_DCHI_SB_ = K_dChi_SB;
+}
+
+void simulationBasedMpc::setKdChiP(double K_dChi_P){
+	K_DCHI_P_ = K_dChi_P;
+}
+
+void simulationBasedMpc::setChiCA(Eigen::VectorXd Chi_ca){
+	Chi_ca_.resize(Chi_ca.size());
+	Chi_ca_ = Chi_ca*DEG2RAD;
+}
+
+void simulationBasedMpc::setPCA(Eigen::VectorXd P_ca){
+	P_ca_.resize(P_ca.size());
+	P_ca_ = P_ca;
+}
 
 void simulationBasedMpc::getBestControlOffset(double &u_os_best, double &psi_os_best, double u_d, double psi_d, const Eigen::Matrix<double,6,1>& asv_state, const Eigen::Matrix<double,-1,9>& obst_states){
 	double cost = INFINITY;
@@ -70,8 +226,8 @@ void simulationBasedMpc::getBestControlOffset(double &u_os_best, double &psi_os_
 		n_obst = obst_vect.size();
 	}
 
-	for (int i = 0; i < Chi_ca_.rows(); i++){
-		for (int j = 0; j < P_ca_.rows(); j++){
+	for (int i = 0; i < Chi_ca_.size(); i++){
+		for (int j = 0; j < P_ca_.size(); j++){
 
 			asv->eulersMethod(asv_state, u_d*P_ca_[j], psi_d+ Chi_ca_[i]);
 
