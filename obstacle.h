@@ -38,8 +38,11 @@ class obstacle
 
 	double psi_;
 	double A_, B_, C_, D_;
+	double os_x, os_y;
 
 	private:
+
+	void calculatePosOffsets();
 
 	void calculateTrajectory();
 

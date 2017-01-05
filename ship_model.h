@@ -36,6 +36,8 @@ class shipModel
 	double getC();
 	double getD();
 
+	void setB(double B);
+
 	Eigen::VectorXd x;
 	Eigen::VectorXd y;
 	Eigen::VectorXd psi;
@@ -43,9 +45,13 @@ class shipModel
 	Eigen::VectorXd v;
 	Eigen::VectorXd r;
 
-	double A, B, C, D;
+	double A_, B_, C_, D_;
+	double os_x, os_y;
 
 	private:
+
+	/// Calculates the offsets according to the position of the GPS receiver
+	void calculate_position_offsets();
 
 	/// Assures that the numerical difference is at most PI
 	double normalize_angle_diff(double angle, double angle_ref);

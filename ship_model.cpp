@@ -25,10 +25,11 @@ shipModel::shipModel(double T, double dt)
 
 	// Model parameters
 	rudder_d = 4.0; // distance from rudder to CG
-	A = 5; // [m]  in reality the length is 14,5 m.
-	B = 5; // [m]
-	C = 1.5; // [m]
-	D = 1.5; // [m]
+	A_ = 5; // [m]  in reality the length is 14,5 m.
+	B_ = 5; // [m]
+	C_ = 1.5; // [m]
+	D_ = 1.5; // [m]
+	calculate_position_offsets();
 	M = 3980.0; // [kg]
 	I_z = 19703.0; // [kg/m2]
 
@@ -104,27 +105,36 @@ Eigen::VectorXd shipModel::getR(){
 }
 
 double shipModel::getA(){
-	return A;
+	return A_;
 }
 
 double shipModel::getB(){
-	return B;
+	return B_;
 }
 
 double shipModel::getC(){
-	return C;
+	return C_;
 }
 
 double shipModel::getD(){
-	return D;
+	return D_;
+}
+
+void shipModel::setB(double B){
+	B_ = B;
+}
+
+void shipModel::calculate_position_offsets(){
+	os_x = A_-B_;
+	os_y = D_-C_;
 }
 
 void shipModel::eulersMethod(const Eigen::Matrix<double,6,1>& state, double u_d, double psi_d)
 {
 
-	x(0) = state(0);
-	y(0) = state(1);
 	psi(0) = normalize_angle(state(2));
+	x(0) = state(0) + os_x*cos(psi(0)) - os_y*sin(psi(0));
+	y(0) = state(1) + os_x*sin(psi(0)) + os_y*cos(psi(0));
 	u(0) = state(3);
 	v(0) = state(4);
 	r(0) = state(5);

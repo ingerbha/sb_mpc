@@ -19,15 +19,19 @@ obstacle::obstacle(const Eigen::Matrix<double,9,1>& state, double T, double dt)
 	u_.resize(n_samp_);
 	v_.resize(n_samp_);
 
-	x_(0) = state(0);
-	y_(0) = state(1);
-	psi_ = state(2);
-	u_(0) = state(3);
-	v_(0) = state(4);
 	A_ = state(5);
 	B_ = state(6);
 	C_ = state(7);
 	D_ = state(8);
+
+	calculatePosOffsets();
+
+	psi_ = state(2);
+	x_(0) = state(0) + os_x*cos(psi_) - os_y*sin(psi_);
+	y_(0) = state(1) + os_x*sin(psi_) + os_y*cos(psi_);
+	u_(0) = state(3);
+	v_(0) = state(4);
+
 
 	r11_ = cos(psi_);
 	r12_ = -sin(psi_);
@@ -74,6 +78,11 @@ double obstacle::getC(){
 
 double obstacle::getD(){
 	return D_;
+}
+
+void obstacle::calculatePosOffsets(){
+	os_x = A_-B_;
+	os_y = D_-C_;
 }
 
 void obstacle::calculateTrajectory()
