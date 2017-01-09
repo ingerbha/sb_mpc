@@ -297,8 +297,8 @@ double simulationBasedMpc::costFunction(double P_ca, double Chi_ca, int k){
 			rot2d(asv->psi[i],v_s);
 
 			psi_o = obst_vect[k]->psi_;
-			while(psi_o <= -M_PI) phi += 2*M_PI;
-			while (psi_o > M_PI) phi -= 2*M_PI;
+			while(psi_o <= -M_PI) psi_o += 2*M_PI;
+			while (psi_o > M_PI) psi_o -= 2*M_PI;
 
 			phi = atan2(d(1),d(0)) - asv->psi[i];
 			while(phi <= -M_PI) phi += 2*M_PI;
