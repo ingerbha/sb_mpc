@@ -30,6 +30,8 @@ class obstacle
 	double getB();
 	double getC();
 	double getD();
+	double getL();
+	double getW();
 
 	Eigen::VectorXd x_;
 	Eigen::VectorXd y_;
@@ -37,7 +39,7 @@ class obstacle
 	Eigen::VectorXd v_;
 
 	double psi_;
-	double A_, B_, C_, D_;
+	double A_, B_, C_, D_, l, w;
 	double os_x, os_y;
 
 	private:

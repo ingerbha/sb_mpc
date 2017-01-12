@@ -15,7 +15,7 @@ static const double RAD2DEG = 180.0f/M_PI;
 
 simulationBasedMpc::simulationBasedMpc(){
 	T_ = 50.0;//100.0;
-	DT_ = 1.0;//0.05;
+	DT_ = 0.001;//0.05;
 
 	P_ = 1.0;
 	Q_ = 4.0;
@@ -260,12 +260,11 @@ void simulationBasedMpc::getBestControlOffset(double &u_os_best, double &psi_os_
 
 double simulationBasedMpc::costFunction(double P_ca, double Chi_ca, int k){
 	double dist, phi, psi_o, psi_rel, R, C, k_coll, d_safe_i;
-	Eigen::Vector2d d, los,v_o, v_s;
+	Eigen::Vector2d d, los, los_inv, v_o, v_s;
 	bool mu, OT, SB, HO, CR;
-	// TODO: Adjust radius front/back according to AIS data
-	double combined_radius = 10; //asv->radius + obstacles_vect[k]->radius_;
-	double d_safe = D_SAFE_ + combined_radius;
-	double d_close = D_CLOSE_ + combined_radius;
+	double combined_radius = asv->getL() + obst_vect[k]->getL();
+	double d_safe = D_SAFE_;
+	double d_close = D_CLOSE_;
 	double H0 = 0;
 	double H1 = 0;
 	double H2 = 0;
@@ -308,11 +307,35 @@ double simulationBasedMpc::costFunction(double P_ca, double Chi_ca, int k){
 			while(psi_rel < -M_PI) psi_rel += 2*M_PI;
 			while(psi_rel > M_PI) psi_rel -= 2*M_PI;
 
+			los = d/dist;
+			los_inv = -d/dist;
+
 			if (phi < 0 && psi_rel > 0){
-				d_safe_i = 0.001*d_safe;
+				d_safe_i = 0.5*d_safe + combined_radius;
 			}else{
-				d_safe_i = d_safe;
+				d_safe_i = d_safe + combined_radius;
 			}
+
+//			// Calculating d_safe
+//			double phi_o;
+//			if (v_s.dot(los) > cos(PHI_AH_*DEG2RAD)*v_s.norm()){ // obst ahead
+//				d_safe_i = d_safe + asv->getL()/2;
+//			}else if (v_s.dot(los) > cos(PHI_OT_*DEG2RAD)*v_s.norm()){ // obst behind
+//				d_safe_i = 0.5*d_safe + asv->getL()/2;
+//			}else{
+//				d_safe_i = 0.5*d_safe + asv->getW()/2;
+//			}
+//
+//			phi_o = atan2(-d(1),d(0)) - obst_vect[k]->psi_;
+//			while(phi_o <= -M_PI) phi_o += 2*M_PI;
+//			while (phi_o > M_PI) phi_o -= 2*M_PI;
+//			if (v_o.dot(los_inv) > cos(PHI_AH_*DEG2RAD)*v_o.norm()){
+//				d_safe_i += d_safe + obst_vect[k]->getL()/2;
+//			}else if(v_o.dot(los_inv) > cos(PHI_OT_*DEG2RAD)*v_o.norm()){
+//				d_safe_i += 0.5*d_safe + obst_vect[k]->getL()/2;
+//			}else{
+//				d_safe_i += 0.5*d_safe + obst_vect[k]->getW()/2;
+//			}
 
 
 			if (dist < d_safe_i){
@@ -321,7 +344,7 @@ double simulationBasedMpc::costFunction(double P_ca, double Chi_ca, int k){
 				C = k_coll*pow((v_s-v_o).norm(),2);
 			}
 
-			los = d/dist;
+
 
 			// Overtaken by obstacle
 			OT = v_s.dot(v_o) > cos(PHI_OT_*DEG2RAD)*v_s.norm()*v_o.norm()

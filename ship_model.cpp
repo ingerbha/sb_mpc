@@ -29,6 +29,8 @@ shipModel::shipModel(double T, double dt)
 	B_ = 5; // [m]
 	C_ = 1.5; // [m]
 	D_ = 1.5; // [m]
+	l = (A_ + B_);
+	w = (C_ + D_);
 	calculate_position_offsets();
 	M = 3980.0; // [kg]
 	I_z = 19703.0; // [kg/m2]
@@ -120,6 +122,14 @@ double shipModel::getD(){
 	return D_;
 }
 
+double shipModel::getL(){
+	return l;
+}
+
+double shipModel::getW(){
+	return w;
+}
+
 void shipModel::setB(double B){
 	B_ = B;
 }
@@ -139,7 +149,7 @@ void shipModel::eulersMethod(const Eigen::Matrix<double,6,1>& state, double u_d,
 	v(0) = state(4);
 	r(0) = state(5);
 
-
+	double x_, y_, psi_, u_, v_, r_;
 	double t = 0;
 	Eigen::Vector3d temp;
 	double r11, r12, r21, r22; // rotation matrix elements
@@ -178,6 +188,13 @@ void shipModel::eulersMethod(const Eigen::Matrix<double,6,1>& state, double u_d,
 		u(i+1) = u(i) + DT_*temp(0);
 		v(i+1) = v(i) + DT_*temp(1);
 		r(i+1) = r(i) + DT_*temp(2);
+
+		x_ = x(i);
+		y_ = y(i);
+		psi_ = psi(i);
+		u_ = u(i);
+		v_ = v(i);
+		r_= r(i);
 
 		// Keep yaw within [-PI,PI)
 		psi(i+1) = normalize_angle(psi(i+1));

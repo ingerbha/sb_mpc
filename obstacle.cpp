@@ -24,6 +24,9 @@ obstacle::obstacle(const Eigen::Matrix<double,9,1>& state, double T, double dt)
 	C_ = state(7);
 	D_ = state(8);
 
+	l = A_ + B_;
+	w = C_ + D_;
+
 	calculatePosOffsets();
 
 	psi_ = state(2);
@@ -80,6 +83,13 @@ double obstacle::getD(){
 	return D_;
 }
 
+double obstacle::getL(){
+	return l;
+}
+
+double obstacle::getW(){
+	return w;
+}
 void obstacle::calculatePosOffsets(){
 	os_x = A_-B_;
 	os_y = D_-C_;

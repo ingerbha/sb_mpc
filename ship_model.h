@@ -36,6 +36,9 @@ class shipModel
 	double getC();
 	double getD();
 
+	double getL();
+	double getW();
+
 	void setB(double B);
 
 	Eigen::VectorXd x;
@@ -45,7 +48,7 @@ class shipModel
 	Eigen::VectorXd v;
 	Eigen::VectorXd r;
 
-	double A_, B_, C_, D_;
+	double A_, B_, C_, D_, l, w;
 	double os_x, os_y;
 
 	private:
