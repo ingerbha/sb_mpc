@@ -145,10 +145,17 @@ public:
 	void setChiCA(Eigen::VectorXd Chi_ca);
 	void setPCA(Eigen::VectorXd P_ca);
 
+	std::string getMethod();
+
+	// i = 0 -> eulers, i = 1 -> linear prediction
+	void setMethod(int i);
+
 
 private:
 
-	void eulerIntegration(double u_d, double psi_d);
+	enum Methods {EulerFirstOrder, LinearPrediction};
+
+	Methods method;
 
 	double costFunction(double P_ca, double Chi_ca, int k);
 

@@ -130,14 +130,30 @@ double shipModel::getW(){
 	return w;
 }
 
+
+void  shipModel::setA(double A){
+	A_ = A;
+}
+
 void shipModel::setB(double B){
 	B_ = B;
 }
+
+void shipModel::setC(double C){
+	C_ = C;
+}
+
+void shipModel::setD(double D){
+	D_ = D;
+}
+
 
 void shipModel::calculate_position_offsets(){
 	os_x = A_-B_;
 	os_y = D_-C_;
 }
+
+
 
 void shipModel::eulersMethod(const Eigen::Matrix<double,6,1>& state, double u_d, double psi_d)
 {
@@ -149,14 +165,10 @@ void shipModel::eulersMethod(const Eigen::Matrix<double,6,1>& state, double u_d,
 	v(0) = state(4);
 	r(0) = state(5);
 
-	double x_, y_, psi_, u_, v_, r_;
-	double t = 0;
 	Eigen::Vector3d temp;
 	double r11, r12, r21, r22; // rotation matrix elements
 
 	for (int i = 0; i < n_samp_-1; i++){
-
-		t += DT_;
 
 		psi_d = normalize_angle_diff(psi_d, psi(i));
 
@@ -189,15 +201,35 @@ void shipModel::eulersMethod(const Eigen::Matrix<double,6,1>& state, double u_d,
 		v(i+1) = v(i) + DT_*temp(1);
 		r(i+1) = r(i) + DT_*temp(2);
 
-		x_ = x(i);
-		y_ = y(i);
-		psi_ = psi(i);
-		u_ = u(i);
-		v_ = v(i);
-		r_= r(i);
-
 		// Keep yaw within [-PI,PI)
 		psi(i+1) = normalize_angle(psi(i+1));
+
+	}
+}
+
+void shipModel::linearPrediction(const Eigen::Matrix<double,6,1>& state, double u_d, double psi_d){
+
+	psi(0) = normalize_angle(psi_d);
+	x(0) = state(0) + os_x*cos(state(2)) - os_y*sin(state(2));
+	y(0) = state(1) + os_x*sin(state(2)) + os_y*cos(state(2));
+	u(0) = state(3);
+	v(0) = state(4);
+	r(0) = state(5);
+
+	double r11, r12, r21, r22;
+
+	r11 = cos(psi_d);
+	r12 = -sin(psi_d);
+	r21 = sin(psi_d);
+	r22 = cos(psi_d);
+
+	for (int i = 0; i < n_samp_-1; i++){
+
+		x(i+1) = x(i) + DT_*(r11*u(i) + r12*v(i));
+		y(i+1) = y(i) + DT_*(r21*u(i) + r22*v(i));
+		psi(i+1) = psi_d;
+		u(i+1) = u_d;
+		v(i+1) = 0;
 
 	}
 }

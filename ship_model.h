@@ -11,6 +11,7 @@
 #include <vector>
 #include <cmath>
 #include <Eigen/Dense>
+#include <string>
 
 class shipModel
 {
@@ -23,6 +24,8 @@ class shipModel
 	~shipModel();
 
 	void eulersMethod(const Eigen::Matrix<double,6,1>& state, double u_d, double psi_d);
+
+	void linearPrediction(const Eigen::Matrix<double,6,1>& state, double u_d, double psi_d);
 
 	Eigen::VectorXd getX();
 	Eigen::VectorXd getY();
@@ -39,7 +42,10 @@ class shipModel
 	double getL();
 	double getW();
 
+	void setA(double A);
 	void setB(double B);
+	void setC(double C);
+	void setD(double D);
 
 	Eigen::VectorXd x;
 	Eigen::VectorXd y;
@@ -50,6 +56,7 @@ class shipModel
 
 	double A_, B_, C_, D_, l, w;
 	double os_x, os_y;
+
 
 	private:
 

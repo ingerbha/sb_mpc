@@ -14,24 +14,25 @@ static const double DEG2RAD = M_PI/180.0f;
 static const double RAD2DEG = 180.0f/M_PI;
 
 simulationBasedMpc::simulationBasedMpc(){
-	T_ = 50.0;//100.0;
-	DT_ = 0.001;//0.05;
+	T_ = 400.0;
+	DT_ = 0.1;
+	method = LinearPrediction;
 
 	P_ = 1.0;
 	Q_ = 4.0;
-	D_CLOSE_ = 100.0;
-	D_SAFE_ = 20.0;
-	K_COLL_ = 0.05;
+	D_CLOSE_ = 200.0;
+	D_SAFE_ = 40.0;
+	K_COLL_ = 0.1;
 	PHI_AH_ = 15.0;
 	PHI_OT_ = 68.5;
 	PHI_HO_ = 22.5;
 	PHI_CR_ = 15.0;
-	KAPPA_ = 20;
-	K_P_ = 2;
+	KAPPA_ = 3.0;
+	K_P_ = 1.4;
 	K_CHI_ = 1.3;
-	K_DP_ = 1;
-	K_DCHI_SB_ = 0.35;
-	K_DCHI_P_ = 1;
+	K_DP_ = 1.3;
+	K_DCHI_SB_ = 0.9;
+	K_DCHI_P_ = 1.2;
 
 	P_ca_last_ = 1;
 	Chi_ca_last_ = 0;
@@ -125,6 +126,23 @@ Eigen::VectorXd simulationBasedMpc::getChiCA(){
 
 Eigen::VectorXd simulationBasedMpc::getPCA(){
 	return P_ca_;
+}
+
+std::string simulationBasedMpc::getMethod(){
+	std::string returnValue;
+	switch (method){
+		case EulerFirstOrder 	: returnValue = "EulerFirstOrder"; break;
+		case LinearPrediction 	: returnValue = "LinearPrediction"; break;
+		default 				: returnValue = "Failed";
+	}
+	return returnValue;
+}
+
+void simulationBasedMpc::setMethod(int i){
+	switch (i){
+	case 0 : method = EulerFirstOrder; break;
+	case 1 : method = LinearPrediction; break;
+	}
 }
 
 // Todo: Add validity checks for the set functions
@@ -229,7 +247,11 @@ void simulationBasedMpc::getBestControlOffset(double &u_os_best, double &psi_os_
 	for (int i = 0; i < Chi_ca_.size(); i++){
 		for (int j = 0; j < P_ca_.size(); j++){
 
-			asv->eulersMethod(asv_state, u_d*P_ca_[j], psi_d+ Chi_ca_[i]);
+			switch(method){
+			case EulerFirstOrder : asv->eulersMethod(asv_state, u_d*P_ca_[j], psi_d + Chi_ca_[i]);
+			case LinearPrediction : asv->linearPrediction(asv_state, u_d*P_ca_[j], psi_d + Chi_ca_[i]);
+			}
+
 
 			cost_i = -1;
 			for (int k = 0; k < n_obst; k++){
@@ -259,7 +281,7 @@ void simulationBasedMpc::getBestControlOffset(double &u_os_best, double &psi_os_
 
 
 double simulationBasedMpc::costFunction(double P_ca, double Chi_ca, int k){
-	double dist, phi, psi_o, psi_rel, R, C, k_coll, d_safe_i;
+	double dist, phi, phi_o, psi_o, psi_rel, R, C, k_coll, d_safe_i;
 	Eigen::Vector2d d, los, los_inv, v_o, v_s;
 	bool mu, OT, SB, HO, CR;
 	double combined_radius = asv->getL() + obst_vect[k]->getL();
@@ -310,37 +332,35 @@ double simulationBasedMpc::costFunction(double P_ca, double Chi_ca, int k){
 			los = d/dist;
 			los_inv = -d/dist;
 
-			if (phi < 0 && psi_rel > 0){
-				d_safe_i = 0.5*d_safe + combined_radius;
+			// Calculating d_safe
+			if (phi < PHI_AH_){//v_s.dot(los) > cos(PHI_AH_*DEG2RAD)*v_s.norm()){ // obst ahead
+				d_safe_i = d_safe + asv->getL()/2;
+			}else if (phi > PHI_OT_){//v_s.dot(los) > cos(PHI_OT_*DEG2RAD)*v_s.norm()){ // obst behind
+				d_safe_i = 0.5*d_safe + asv->getL()/2;
 			}else{
-				d_safe_i = d_safe + combined_radius;
+				d_safe_i = d_safe + asv->getW()/2;
 			}
 
-//			// Calculating d_safe
-//			double phi_o;
-//			if (v_s.dot(los) > cos(PHI_AH_*DEG2RAD)*v_s.norm()){ // obst ahead
-//				d_safe_i = d_safe + asv->getL()/2;
-//			}else if (v_s.dot(los) > cos(PHI_OT_*DEG2RAD)*v_s.norm()){ // obst behind
-//				d_safe_i = 0.5*d_safe + asv->getL()/2;
-//			}else{
-//				d_safe_i = 0.5*d_safe + asv->getW()/2;
-//			}
-//
-//			phi_o = atan2(-d(1),d(0)) - obst_vect[k]->psi_;
-//			while(phi_o <= -M_PI) phi_o += 2*M_PI;
-//			while (phi_o > M_PI) phi_o -= 2*M_PI;
-//			if (v_o.dot(los_inv) > cos(PHI_AH_*DEG2RAD)*v_o.norm()){
-//				d_safe_i += d_safe + obst_vect[k]->getL()/2;
-//			}else if(v_o.dot(los_inv) > cos(PHI_OT_*DEG2RAD)*v_o.norm()){
-//				d_safe_i += 0.5*d_safe + obst_vect[k]->getL()/2;
-//			}else{
-//				d_safe_i += 0.5*d_safe + obst_vect[k]->getW()/2;
-//			}
+			phi_o = atan2(-d(1),-d(0)) - obst_vect[k]->psi_;
+			while(phi_o <= -M_PI) phi_o += 2*M_PI;
+			while (phi_o > M_PI) phi_o -= 2*M_PI;
+
+			if (phi_o < PHI_AH_){//v_o.dot(los_inv) > cos(PHI_AH_*DEG2RAD)*v_o.norm()){ // ship ahead
+				d_safe_i += d_safe + obst_vect[k]->getL()/2;
+			}else if(phi_o > PHI_OT_){//v_o.dot(los_inv) > cos(PHI_OT_*DEG2RAD)*v_o.norm()){ // ship behind
+				d_safe_i += 0.5*d_safe + obst_vect[k]->getL()/2;
+			}else{
+				d_safe_i += d_safe + obst_vect[k]->getW()/2;
+			}
+
+			if (v_s.dot(v_o) > cos(PHI_OT_*DEG2RAD)*v_s.norm()*v_o.norm() && v_s.norm() > v_o.norm()){
+				d_safe_i = d_safe + asv->getL()/2 + obst_vect[k]->getL()/2;
+			}
 
 
 			if (dist < d_safe_i){
 				R = (1/pow(fabs(t-t0),P_))*pow(d_safe/dist,Q_);
-				k_coll = K_COLL_*combined_radius;
+				k_coll = K_COLL_*asv->getL()*obst_vect[k]->getL();
 				C = k_coll*pow((v_s-v_o).norm(),2);
 			}
 
