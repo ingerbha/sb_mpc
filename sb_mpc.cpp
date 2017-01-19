@@ -22,15 +22,15 @@ simulationBasedMpc::simulationBasedMpc(){
 	Q_ = 4.0;
 	D_CLOSE_ = 200.0;
 	D_SAFE_ = 40.0;
-	K_COLL_ = 0.1;
+	K_COLL_ = 0.5;
 	PHI_AH_ = 15.0;
 	PHI_OT_ = 68.5;
 	PHI_HO_ = 22.5;
-	PHI_CR_ = 15.0;
+	PHI_CR_ = 68.5;
 	KAPPA_ = 3.0;
-	K_P_ = 1.4;
+	K_P_ = 2.5;
 	K_CHI_ = 1.3;
-	K_DP_ = 1.3;
+	K_DP_ = 2.0;
 	K_DCHI_SB_ = 0.9;
 	K_DCHI_P_ = 1.2;
 
