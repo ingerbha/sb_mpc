@@ -249,7 +249,9 @@ void simulationBasedMpc::getBestControlOffset(double &u_os_best, double &psi_os_
 
 			switch(method){
 			case EulerFirstOrder : asv->eulersMethod(asv_state, u_d*P_ca_[j], psi_d + Chi_ca_[i]);
-			case LinearPrediction : asv->linearPrediction(asv_state, u_d*P_ca_[j], psi_d + Chi_ca_[i]);
+					break;
+			case LinearPrediction : asv->linearPrediction(asv_state, u_d*P_ca_[j], psi_d + Chi_ca_[i])
+					break;
 			}
 
 
